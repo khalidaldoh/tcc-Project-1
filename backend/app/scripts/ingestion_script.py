@@ -1,5 +1,5 @@
 import pandas as pd
-from app.database.connection import Session
+from app.database.connection import SessionLocal
 from app.database.models import Logs
 
 
@@ -8,7 +8,7 @@ def load_dataset():
     df = df.drop(columns=["id"])
     records = df.to_dict(orient="records")
 
-    session = Session()
+    session = SessionLocal()
 
     try:
 

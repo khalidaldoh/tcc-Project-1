@@ -1,5 +1,8 @@
 from sqlalchemy import JSON, Column, Integer,Float, String, Boolean, DateTime, BigInteger
 from .connection import Base
+from datetime import datetime, UTC
+
+
 class Logs(Base):
     __tablename__ = "logs"
     id = Column(Integer, primary_key=True, index=True)
@@ -68,7 +71,11 @@ class Logs(Base):
 
 class Results(Base):
     __tablename__ = "results"
-    id = Column(Integer, primary_key=True, index=True)
-    created_at = Column(DateTime)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    created_at = Column(
+    DateTime(timezone=True),
+    default=lambda: datetime.now(UTC),
+    nullable=False)
     input_data = Column(JSON)
     predicted_label = Column(Boolean)
+    confidence = Column(Float)
