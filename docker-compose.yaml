@@ -1,6 +1,6 @@
 services:
   backend:
-    image: intrusion-api:latest  
+    image: khalid7730/intrusion-api:latest  
     ports:
       - "8000:8000"
     depends_on:
