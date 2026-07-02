@@ -1,13 +1,10 @@
 services:
   backend:
-    build: 
-      context: ./backend
+    image: intrusion-api:latest  
     ports:
       - "8000:8000"
     depends_on:
       - db
-    volumes:
-      - ./backend:/backend
     environment:
       DATABASE_URL: ${DATABASE_URL}
   

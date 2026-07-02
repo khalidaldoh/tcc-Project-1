@@ -1,0 +1,77 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Git
+.git/
+.gitignore
+
+# IDEs
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Logs
+*.log
+
+# Environment files
+.env
+.env.*
+
+# Docker
+docker-compose*.yml
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Documentation
+*.md
+
+# Local database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary files
+tmp/
+temp/
+
+# Node (if applicable)
+node_modules/
+
+# AWS
+.aws/
+
+# Terraform (if applicable)
+.terraform/
+*.tfstate
+*.tfstate.*
+
+# OS files
+Thumbs.db
+
+.csv
+saved_models/
+UNSW_NB15_training-set.csv
+*.csv
