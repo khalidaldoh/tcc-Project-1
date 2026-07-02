@@ -1,3 +1,13 @@
 UNSW_NB15_training-set.csv
 .env
 saved_models
+__pycache__/
+*.py[cod]
+*.pyc
+
+.env
+
+.venv/
+venv/
+
+.pytest_cache/
