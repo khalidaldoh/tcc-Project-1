@@ -72,6 +72,8 @@ node_modules/
 Thumbs.db
 
 .csv
-saved_models/
-UNSW_NB15_training-set.csv
 *.csv
+**/saved_models/
+app/saved_models/
+*.joblib
+*.pkl

@@ -1,6 +1,9 @@
 services:
   backend:
-    image: khalid7730/intrusion-api:latest  
+    build:
+      context: ./backend
+    image: khalid7730/intrusion-api:latest
+    platform: linux/amd64
     ports:
       - "8000:8000"
     depends_on:
