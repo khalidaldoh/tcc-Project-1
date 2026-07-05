@@ -21,7 +21,7 @@ jobs:
 
       - name: Build and Push Image
         run: |
-          docker build -t khalid7730/intrusion-api:latest .
+          docker compose build
           docker push khalid7730/intrusion-api:latest
 
       - name: Deploy to EC2
