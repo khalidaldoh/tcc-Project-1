@@ -10,6 +10,9 @@ services:
       - db
     environment:
       DATABASE_URL: ${DATABASE_URL}
+      AWS_BUCKET_NAME: ${AWS_BUCKET_NAME}
+      AWS_MODEL_KEY: ${AWS_MODEL_KEY}
+      AWS_LOCAL_MODEL_PATH: ${AWS_LOCAL_MODEL_PATH}
   
   db:
     image: postgres:13
