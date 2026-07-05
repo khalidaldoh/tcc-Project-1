@@ -34,3 +34,4 @@ jobs:
             cd /home/ubuntu/tcc-Project-1
             docker compose pull
             docker compose up -d
+            
