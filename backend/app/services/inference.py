@@ -58,6 +58,7 @@ def batch_prediction(pipeline, input_data_list: list[InputDataSchema], db_sessio
             )
         
         response.append({
+            "timestamp": data.created_at.isoformat(),
              "Prediction":"attack" if int(pred) == 1 else "normal",
              "label": int(pred),
              "confidence": float(conf),
