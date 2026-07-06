@@ -1,4 +1,4 @@
-import os
+"""import os
 import json
 import pika
 
@@ -90,4 +90,4 @@ if __name__ == "__main__":
     )
 
     print("Worker running...")
-    channel.start_consuming()
+    channel.start_consuming()"""
