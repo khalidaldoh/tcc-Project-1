@@ -12,3 +12,4 @@ seaborn
 psycopg
 dotenv
 boto3
+redis[hiredis]

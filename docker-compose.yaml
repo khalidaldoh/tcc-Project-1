@@ -13,7 +13,9 @@ services:
       AWS_BUCKET_NAME: ${AWS_BUCKET_NAME}
       AWS_MODEL_KEY: ${AWS_MODEL_KEY}
       AWS_LOCAL_MODEL_PATH: ${AWS_LOCAL_MODEL_PATH}
-  
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_SSL: ${REDIS_SSL}
   db:
     image: postgres:13
     environment:

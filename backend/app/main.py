@@ -7,6 +7,7 @@ from app.database.connection import get_db
 from sqlalchemy.orm import Session 
 import sys
 import os
+from app.utils.cach import redis_client
 model_manager = ModelManager("rf_model")
 
 bucket = os.getenv("AWS_BUCKET_NAME")
@@ -36,3 +37,9 @@ def predict(input_data: InputDataSchema, db: Session=Depends(get_db)):
     pipeline = model_manager.get_pipeline()
     prediction_result = prediction(pipeline=pipeline, input_data=input_data, db_session=db)
     return {"prediction": prediction_result}
+
+@app.get("/redis-test")
+def redis_test():
+    redis_client.set("test", "connected", ex=60)
+    value = redis_client.get("test")
+    return {"redis": value}
