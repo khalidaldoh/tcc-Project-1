@@ -12,6 +12,7 @@ import json
 import pika
 import uuid
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("Startup Python:", sys.executable)
