@@ -12,7 +12,6 @@ import json
 import pika
 import uuid
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("Startup Python:", sys.executable)
@@ -22,18 +21,11 @@ async def lifespan(app: FastAPI):
     except ConnectionError:
         print("Failed to connect to Redis.")
         raise
-    try:
-        channel.queue_declare(queue="prediction_queue", durable=True)
-        print("RabbitMQ connected successfully.")
-    except Exception as e:
-        print("RabbitMQ connection failed:", e)
-        raise
 
 
     yield
     
     redis_client.close()
-    connection.close()
 
     print("Application is shutting down...")
 
@@ -50,7 +42,7 @@ def redis_test():
     return {"redis": value}
 
 @app.post("/predict")
-def predict(input_data: InputDataSchema, db: Session=Depends(get_db)):
+def predict(input_data: InputDataSchema):
     """
     Endpoint to predict the output based on the input data.
 
@@ -69,7 +61,7 @@ def predict(input_data: InputDataSchema, db: Session=Depends(get_db)):
     return {"job_id": job_id, "status": "queued"}
 
 @app.post("/predict-batch")
-def predict_batch(input_data_list: list[InputDataSchema], db: Session=Depends(get_db)):
+def predict_batch(input_data_list: list[InputDataSchema]):
     """
     Endpoint to predict the output for a batch of input data.
     """
