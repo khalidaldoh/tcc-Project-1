@@ -3,7 +3,7 @@ from sklearn import pipeline
 from app.schemas.input_data_schema import InputDataSchema
 import pandas as pd
 from app.database.models import Results
-def prediction(pipeline ,input_data: InputDataSchema, db_session=None):
+def prediction(pipeline ,input_data: InputDataSchema, db_session):
     """
     Predicts the output based on the input data using the loaded model.
 
