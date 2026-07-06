@@ -17,12 +17,12 @@ def get_statistics(db_session):
 
     normal = (
         db_session.query(func.count(Results.id))
-        .filter(Results.predicted_label == 0)
+        .filter(Results.predicted_label == False)
         .scalar()
     )
     attack = (
         db_session.query(func.count(Results.id))
-        .filter(Results.predicted_label == 1)
+        .filter(Results.predicted_label == True)
         .scalar()
     )
     total = normal + attack
