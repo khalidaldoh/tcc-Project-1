@@ -64,7 +64,7 @@ def batch_prediction(pipeline, input_data_list: list[InputDataSchema], db_sessio
                 }
              )
         
-    db_session.add(db_records)
+    db_session.add_all(db_records)
     db_session.commit()
 
     
