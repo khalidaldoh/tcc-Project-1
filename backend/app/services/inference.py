@@ -56,7 +56,8 @@ def batch_prediction(pipeline, input_data_list: list[InputDataSchema], db_sessio
             confidence=float(conf)
                 )
             )
-        
+
+            
         response.append({
              "Prediction":"attack" if int(pred) == 1 else "normal",
              "label": int(pred),
