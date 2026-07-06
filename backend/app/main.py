@@ -1,7 +1,5 @@
 from fastapi import Depends, FastAPI
 from app.schemas.input_data_schema import InputDataSchema
-from app.utils.model_manager import ModelManager
-from app.services.inference import prediction, batch_prediction
 from contextlib import asynccontextmanager
 from app.database.connection import get_db
 from sqlalchemy.orm import Session 
@@ -9,17 +7,14 @@ import sys
 import os
 from app.utils.cach import redis_client
 from app.services.statistics import get_statistics
-from app.utils.rabbitmq import connection
-model_manager = ModelManager("rf_model")
-
-bucket = os.getenv("AWS_BUCKET_NAME")
-key = os.getenv("AWS_MODEL_KEY")
-local_path = os.getenv("AWS_LOCAL_MODEL_PATH")
+from app.utils.rabbitmq import connection, channel
+import json
+import pika
+import uuid
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("Startup Python:", sys.executable)
-    model_manager.load_from_s3(bucket=bucket, key=key, local_path=local_path)
     try:
         redis_client.ping()
         print("Redis connected successfully.")
@@ -27,11 +22,12 @@ async def lifespan(app: FastAPI):
         print("Failed to connect to Redis.")
         raise
     try:
-        connection.process_data_events()
-        print("RabbittMQ connected successfully.")
-    except ConnectionError:
-        print("Failed to connect to RabbittMQ.")
+        channel.queue_declare(queue="prediction_queue", durable=True)
+        print("RabbitMQ connected successfully.")
+    except Exception as e:
+        print("RabbitMQ connection failed:", e)
         raise
+
 
     yield
     
@@ -58,21 +54,45 @@ def predict(input_data: InputDataSchema, db: Session=Depends(get_db)):
     Endpoint to predict the output based on the input data.
 
     """
-    pipeline = model_manager.get_pipeline()
-    prediction_result = prediction(pipeline=pipeline, input_data=input_data, db_session=db)
-    redis_client.delete("statistics")
-    return {"prediction": prediction_result}
+    job_id = str(uuid.uuid4())
+    
+    channel.basic_publish(
+    exchange="",
+    routing_key="prediction_queue",
+    body=json.dumps({
+        "job_id": job_id,
+        "type": "single",
+        "data": input_data.dict()
+    }).encode()
+)
+    return {"job_id": job_id, "status": "queued"}
 
 @app.post("/predict-batch")
 def predict_batch(input_data_list: list[InputDataSchema], db: Session=Depends(get_db)):
     """
     Endpoint to predict the output for a batch of input data.
     """
-    pipeline = model_manager.get_pipeline()
-    prediction_results = batch_prediction(pipeline=pipeline, input_data_list=input_data_list, db_session=db)
-    redis_client.delete("statistics")
-    return {"predictions": prediction_results}
+    job_id = str(uuid.uuid4())
+    channel.basic_publish(
+        exchange="",
+        routing_key="prediction_queue",
+        body=json.dumps({
+            "job_id": job_id,
+            "type": "batch",
+            "data": [x.dict() for x in input_data_list]
+        }).encode()
+    )
+    
+    return {"job_id": job_id, "status": "queued"}
 
+@app.get("/result/{job_id}")
+def get_result(job_id: str):
+    result = redis_client.get(job_id)
+
+    if not result:
+        return {"status": "processing"}
+
+    return json.loads(result)
 
 @app.get("/statistics")
 def statistics(db: Session=Depends(get_db)):
