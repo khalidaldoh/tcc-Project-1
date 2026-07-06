@@ -7,15 +7,18 @@ import sys
 import os
 from app.utils.cach import redis_client
 from app.services.statistics import get_statistics
-from app.utils.rabbitmq import connection, channel
 import json
 import pika
 import uuid
+from app.utils.rabbitmq import get_channel
 
+channel=None
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("Startup Python:", sys.executable)
     try:
+        global channel
+        connection, channel = get_channel()
         redis_client.ping()
         print("Redis connected successfully.")
     except ConnectionError:
