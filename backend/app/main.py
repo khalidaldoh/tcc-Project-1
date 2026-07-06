@@ -9,6 +9,7 @@ import sys
 import os
 from app.utils.cach import redis_client
 from app.services.statistics import get_statistics
+from app.utils.rabbitmq import connection
 model_manager = ModelManager("rf_model")
 
 bucket = os.getenv("AWS_BUCKET_NAME")
@@ -25,8 +26,18 @@ async def lifespan(app: FastAPI):
     except ConnectionError:
         print("Failed to connect to Redis.")
         raise
+    try:
+        connection.process_data_events()
+        print("RabbittMQ connected successfully.")
+    except ConnectionError:
+        print("Failed to connect to RabbittMQ.")
+        raise
+
     yield
+    
     redis_client.close()
+    connection.close()
+
     print("Application is shutting down...")
 
 app = FastAPI(lifespan=lifespan)

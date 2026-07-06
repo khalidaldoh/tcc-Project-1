@@ -13,3 +13,4 @@ psycopg
 dotenv
 boto3
 redis[hiredis]
+pika
