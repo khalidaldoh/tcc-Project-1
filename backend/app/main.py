@@ -1,7 +1,7 @@
 from fastapi import Depends, FastAPI
 from app.schemas.input_data_schema import InputDataSchema
 from app.utils.model_manager import ModelManager
-from app.services.inference import prediction
+from app.services.inference import prediction, batch_prediction
 from contextlib import asynccontextmanager
 from app.database.connection import get_db
 from sqlalchemy.orm import Session 
@@ -9,19 +9,24 @@ import sys
 import os
 from app.utils.cach import redis_client
 from app.services.statistics import get_statistics
-
 model_manager = ModelManager("rf_model")
 
 bucket = os.getenv("AWS_BUCKET_NAME")
 key = os.getenv("AWS_MODEL_KEY")
 local_path = os.getenv("AWS_LOCAL_MODEL_PATH")
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("Startup Python:", sys.executable)
     model_manager.load_from_s3(bucket=bucket, key=key, local_path=local_path)
-
+    try:
+        redis_client.ping()
+        print("Redis connected successfully.")
+    except ConnectionError:
+        print("Failed to connect to Redis.")
+        raise
     yield
-
+    redis_client.close()
     print("Application is shutting down...")
 
 app = FastAPI(lifespan=lifespan)
@@ -46,6 +51,16 @@ def predict(input_data: InputDataSchema, db: Session=Depends(get_db)):
     prediction_result = prediction(pipeline=pipeline, input_data=input_data, db_session=db)
     redis_client.delete("statistics")
     return {"prediction": prediction_result}
+
+@app.post("/predict-batch")
+def predict_batch(input_data_list: list[InputDataSchema], db: Session=Depends(get_db)):
+    """
+    Endpoint to predict the output for a batch of input data.
+    """
+    pipeline = model_manager.get_pipeline()
+    prediction_results = batch_prediction(pipeline=pipeline, input_data_list=input_data_list, db_session=db)
+    redis_client.delete("statistics")
+    return {"predictions": prediction_results}
 
 
 @app.get("/statistics")

@@ -13,52 +13,9 @@ def prediction(pipeline ,input_data: InputDataSchema, db_session):
     Returns:
         array: The predicted output.
     """
-    data = {
-        "proto": input_data.proto,
-        "service": input_data.service,
-        "state": input_data.state,
-        "dur": input_data.dur,
-        "spkts": input_data.spkts,
-        "dpkts": input_data.dpkts,
-        "sbytes": input_data.sbytes,
-        "dbytes": input_data.dbytes,
-        "rate": input_data.rate,
-        "sttl": input_data.sttl,
-        "dttl": input_data.dttl,
-        "sload": input_data.sload,
-        "dload": input_data.dload,
-        "sloss": input_data.sloss,
-        "dloss": input_data.dloss,
-        "sinpkt": input_data.sinpkt,
-        "dinpkt": input_data.dinpkt,
-        "sjit": input_data.sjit,
-        "djit": input_data.djit,
-        "swin": input_data.swin,
-        "stcpb": input_data.stcpb,
-        "dtcpb": input_data.dtcpb,
-        "dwin": input_data.dwin,
-        "tcprtt": input_data.tcprtt,
-        "synack": input_data.synack,
-        "ackdat": input_data.ackdat,
-        "smean": input_data.smean,
-        "dmean": input_data.dmean,
-        "trans_depth": input_data.trans_depth,
-        "response_body_len": input_data.response_body_len,
-        "ct_srv_src": input_data.ct_srv_src,
-        "ct_state_ttl": input_data.ct_state_ttl,
-        "ct_dst_ltm": input_data.ct_dst_ltm,
-        "ct_src_dport_ltm": input_data.ct_src_dport_ltm,
-        "ct_dst_sport_ltm": input_data.ct_dst_sport_ltm,
-        "ct_dst_src_ltm": input_data.ct_dst_src_ltm,
-        "is_ftp_login": input_data.is_ftp_login,
-        "ct_ftp_cmd": input_data.ct_ftp_cmd,
-        "ct_flw_http_mthd": input_data.ct_flw_http_mthd,
-        "ct_src_ltm": input_data.ct_src_ltm,
-        "ct_srv_dst": input_data.ct_srv_dst,
-        "is_sm_ips_ports": input_data.is_sm_ips_ports,
-    }
+    data = [input_data.model_dump()]
 
-    X = pd.DataFrame([data])
+    X = pd.DataFrame(data)
 
     prediction_result = int(pipeline.predict(X)[0])
     confidence = pipeline.predict_proba(X)[0].max()
@@ -79,7 +36,40 @@ def prediction(pipeline ,input_data: InputDataSchema, db_session):
     return label
     
 
+def batch_prediction(pipeline, input_data_list: list[InputDataSchema], db_session):
+    """
+    Predicts the output for a batch of input data using the loaded model.
+    """
+    data = [record.model_dump() for record in input_data_list]
+    X = pd.DataFrame(data)
 
+    prediction_results = pipeline.predict(X)
+    proba = pipeline.predict_proba(X)
+    confidence = proba.max(axis=1)
+
+    db_records = []
+    response = []
+    for record, pred, conf in zip(input_data_list, prediction_results, confidence):
+        db_records.append(Results(
+            input_data=record.model_dump(),
+            predicted_label=bool(pred),
+            confidence=float(conf)
+                )
+            )
+        
+        response.append({
+             "Prediction":"attack" if pred == 1 else "normal",
+             "label": pred,
+             "confidence": conf,
+                }
+             )
+        
+    db_session.add(db_records)
+    db_session.commit()
+
+    
+    return response
+    
 
 
 
