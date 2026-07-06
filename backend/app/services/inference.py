@@ -32,7 +32,7 @@ def prediction(pipeline ,input_data: InputDataSchema, db_session):
     label = {"timestamp": record.created_at.isoformat(),
              "Prediction":"attack" if prediction_result == 1 else "normal",
              "label": prediction_result,
-             "confidence": confidence,}
+             "confidence": float(confidence),}
     return label
     
 
@@ -58,9 +58,9 @@ def batch_prediction(pipeline, input_data_list: list[InputDataSchema], db_sessio
             )
         
         response.append({
-             "Prediction":"attack" if pred == 1 else "normal",
-             "label": pred,
-             "confidence": conf,
+             "Prediction":"attack" if int(pred) == 1 else "normal",
+             "label": int(pred),
+             "confidence": float(conf),
                 }
              )
         
