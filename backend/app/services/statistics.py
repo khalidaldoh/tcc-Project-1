@@ -1,7 +1,7 @@
 from app.utils.cach import redis_client
 import json
 from sqlalchemy import func
-from app.database.models import Results
+from app.database.models import PredictionResults
 def get_statistics(db_session):
     """
     Retrieves statistics from the database.
@@ -16,13 +16,13 @@ def get_statistics(db_session):
 
 
     normal = (
-        db_session.query(func.count(Results.id))
-        .filter(Results.predicted_label == False)
+        db_session.query(func.count(PredictionResults.id))
+        .filter(PredictionResults.predicted_label == False)
         .scalar()
     )
     attack = (
-        db_session.query(func.count(Results.id))
-        .filter(Results.predicted_label == True)
+        db_session.query(func.count(PredictionResults.id))
+        .filter(PredictionResults.predicted_label == True)
         .scalar()
     )
     total = normal + attack

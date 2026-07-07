@@ -1,9 +1,7 @@
-import joblib
-from sklearn import pipeline 
-from app.schemas.input_data_schema import InputDataSchema
 import pandas as pd
-from app.database.models import Results
-def prediction(pipeline ,input_data: InputDataSchema, db_session):
+from app.database.models import PredictionResults
+
+def prediction(pipeline ,input_data: dict, db_session):
     """
     Predicts the output based on the input data using the loaded model.
 
@@ -13,14 +11,13 @@ def prediction(pipeline ,input_data: InputDataSchema, db_session):
     Returns:
         array: The predicted output.
     """
-    data = [input_data.model_dump()]
-
-    X = pd.DataFrame(data)
+    X = pd.DataFrame([input_data])
 
     prediction_result = int(pipeline.predict(X)[0])
     confidence = pipeline.predict_proba(X)[0].max()
-    record = Results(
-        input_data = data,
+
+    record = PredictionResults(
+        input_data = input_data,
         predicted_label = prediction_result,
         confidence = float(confidence)
     )
@@ -36,12 +33,11 @@ def prediction(pipeline ,input_data: InputDataSchema, db_session):
     return label
     
 
-def batch_prediction(pipeline, input_data_list: list[InputDataSchema], db_session):
+def batch_prediction(pipeline, input_data_list: list[dict], db_session):
     """
     Predicts the output for a batch of input data using the loaded model.
     """
-    data = [record.model_dump() for record in input_data_list]
-    X = pd.DataFrame(data)
+    X = pd.DataFrame(input_data_list)
 
     prediction_results = pipeline.predict(X)
     proba = pipeline.predict_proba(X)
@@ -50,13 +46,14 @@ def batch_prediction(pipeline, input_data_list: list[InputDataSchema], db_sessio
     db_records = []
     response = []
     for record, pred, conf in zip(input_data_list, prediction_results, confidence):
-        db_records.append(Results(
-            input_data=record.model_dump(),
+        db_records.append(PredictionResults(
+            input_data=record,
             predicted_label=bool(pred),
             confidence=float(conf)
                 )
             )
-        
+
+            
         response.append({
              "Prediction":"attack" if int(pred) == 1 else "normal",
              "label": int(pred),
@@ -70,6 +67,49 @@ def batch_prediction(pipeline, input_data_list: list[InputDataSchema], db_sessio
     
     return response
     
+
+def queue_prediction(pipeline, input_data: dict, db_session, result_id):
+    record = db_session.get(PredictionResults, result_id)
+    if record is None:
+        raise ValueError(f"Result {result_id} not found")
+    record.status = "processing"
+    db_session.commit()
+    X = pd.DataFrame([input_data])
+    prediction_result = int(pipeline.predict(X)[0])
+    confidence = pipeline.predict_proba(X)[0].max()
+    record.predicted_label = bool(prediction_result)
+    record.confidence = float(confidence)
+    record.status = "completed"
+
+    db_session.commit()
+
+
+def queue_batch_prediction(pipeline, input_data_list: list[dict], db_session, result_ids):
+    for result_id in result_ids:
+        record = db_session.get(PredictionResults, result_id)
+        if record is None:
+            raise ValueError(f"Result {result_id} not found")
+        record.status = "processing"
+    db_session.commit()
+    X = pd.DataFrame(input_data_list)
+    prediction_results = pipeline.predict(X)
+    proba = pipeline.predict_proba(X)
+    confidence = proba.max(axis=1)
+
+    for result_id, pred, conf in zip(
+        result_ids,
+        prediction_results,
+        confidence
+    ):
+        record = db_session.get(PredictionResults,result_id)
+        if record is None:
+            raise ValueError(f"Result {result_id} not found")
+        record.predicted_label = bool(pred)
+        record.confidence = float(conf)
+        record.status = "completed"
+
+    db_session.commit()
+
 
 
 
