@@ -94,7 +94,7 @@ def queued_predict_batch(input_data_list: list[InputDataSchema],db: Session=Depe
     for item in input_data_list:
         records.append(
             PredictionResults(
-                input_data=item.model.dumbs(),
+                input_data=item.model_dumb(),
                 status="queued"
             )
         )
