@@ -19,7 +19,7 @@ def callback(ch, method, properties, body):
     job_id = message["job_id"]
     job_type = message["job_type"]
     payload = message["payload"]
-
+    print("Received message:", message)
     db_session = SessionLocal()
     try:
         pipeline = model_manager.get_pipeline()
