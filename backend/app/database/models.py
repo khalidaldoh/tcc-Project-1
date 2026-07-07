@@ -69,13 +69,18 @@ class Logs(Base):
     label = Column(Integer)
 
 
-class Results(Base):
+class PredictionResults(Base):
     __tablename__ = "results"
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     created_at = Column(
     DateTime(timezone=True),
     default=lambda: datetime.now(UTC),
     nullable=False)
+    status = Column(
+        String,
+        default="pending",
+        nullable=False
+    )
     input_data = Column(JSON)
     predicted_label = Column(Boolean)
     confidence = Column(Float)

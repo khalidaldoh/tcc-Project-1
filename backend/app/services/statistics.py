@@ -1,7 +1,7 @@
 from app.utils.cach import redis_client
 import json
 from sqlalchemy import func
-from app.database.models import Results
+from app.database.models import PredictionResults
 def get_statistics(db_session):
     """
     Retrieves statistics from the database.

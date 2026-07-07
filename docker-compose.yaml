@@ -7,7 +7,7 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - db
+      - rabbitmq
     environment:
       DATABASE_URL: ${DATABASE_URL}
       AWS_BUCKET_NAME: ${AWS_BUCKET_NAME}
@@ -16,15 +16,29 @@ services:
       REDIS_HOST: ${REDIS_HOST}
       REDIS_PORT: ${REDIS_PORT}
       REDIS_SSL: ${REDIS_SSL}
-  db:
-    image: postgres:13
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+
+  worker:
+    image: khalid7730/intrusion-api:latest
+    command: python -m app.utils.rabbitmq
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      DATABASE_URL: ${DATABASE_URL}
+      AWS_BUCKET_NAME: ${AWS_BUCKET_NAME}
+      AWS_MODEL_KEY: ${AWS_MODEL_KEY}
+      AWS_LOCAL_MODEL_PATH: ${AWS_LOCAL_MODEL_PATH}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_SSL: ${REDIS_SSL}
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+    depends_on:
+      - rabbitmq
+
+  rabbitmq:
+    image: rabbitmq:3-management
     ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-volumes:
-  postgres_data:
+      - "5672:5672"
+      - "15672:15672"
+      
+
