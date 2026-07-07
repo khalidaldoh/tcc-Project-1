@@ -73,7 +73,7 @@ def queued_predict(input_data: InputDataSchema,db: Session=Depends(get_db)):
     Endpoint to predict the output based on the input data with queue.
     """
     record = PredictionResults(
-        input_data=input_data,
+        input_data=input_data.model_dump(),
         status="queued"
     )
     db.add(record)
@@ -94,7 +94,7 @@ def queued_predict_batch(input_data_list: list[InputDataSchema],db: Session=Depe
     for item in input_data_list:
         records.append(
             PredictionResults(
-                input_data=item,
+                input_data=item.model.dumbs(),
                 status="queued"
             )
         )
