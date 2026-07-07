@@ -27,7 +27,7 @@ def callback(ch, method, properties, body):
             queue_prediction(pipeline=pipeline, input_data=payload, db_session=db_session,result_id=job_id)
             
         elif job_type == "batch_prediction":
-            queue_batch_prediction(pipeline=pipeline, input_data=payload, db_session=db_session,result_ids=job_id)
+            queue_batch_prediction(pipeline=pipeline, input_data_list=payload, db_session=db_session,result_ids=job_id)
         ch.basic_ack(
         delivery_tag=method.delivery_tag
         )
@@ -74,4 +74,5 @@ def start_worker():
     finally:
         connection.close()
 
-
+if __name__ == "__main__":
+    start_worker()
