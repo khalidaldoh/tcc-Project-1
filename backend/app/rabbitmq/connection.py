@@ -18,7 +18,6 @@ def get_connection():
                 port = port
             )
         )
-
         return connection
     except Exception as e:
         traceback.print_exc()
