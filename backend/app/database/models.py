@@ -72,6 +72,7 @@ class Logs(Base):
 class PredictionResults(Base):
     __tablename__ = "results"
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    job_id = Column(String, nullable=True, index=True)
     created_at = Column(
     DateTime(timezone=True),
     default=lambda: datetime.now(UTC),

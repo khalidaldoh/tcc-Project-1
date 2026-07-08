@@ -2,6 +2,7 @@ from fastapi import Depends, FastAPI
 from app.schemas.input_data_schema import InputDataSchema
 from app.utils.model_manager import ModelManager
 from app.services.inference import prediction, batch_prediction
+from app.services.results import get_results_by_job_id
 from contextlib import asynccontextmanager
 from app.database.connection import get_db
 from sqlalchemy.orm import Session 
@@ -72,16 +73,19 @@ def queued_predict(input_data: InputDataSchema,db: Session=Depends(get_db)):
     """
     Endpoint to predict the output based on the input data with queue.
     """
+    job_id = str(uuid.uuid4())
     record = PredictionResults(
+        job_id=job_id,
         input_data=input_data.model_dump(),
         status="queued"
     )
     db.add(record)
     db.commit()
     db.refresh(record)
-    publish_prediction(job_id=record.id,job_type="prediction", payload= input_data.model_dump())
+
+    publish_prediction(job_id=record.id, job_type="prediction", payload=input_data.model_dump())
     return {
-    "job_id": record.id,
+    "job_id": job_id,
     "status": "queued"
     }
     
@@ -91,9 +95,11 @@ def queued_predict_batch(input_data_list: list[InputDataSchema],db: Session=Depe
     Endpoint to predict the output for a batch of input data with queue
     """
     records = []
+    job_id = str(uuid.uuid4())
     for item in input_data_list:
         records.append(
             PredictionResults(
+                job_id=job_id,
                 input_data=item.model_dump(),
                 status="queued"
             )
@@ -107,7 +113,7 @@ def queued_predict_batch(input_data_list: list[InputDataSchema],db: Session=Depe
                         payload= [record.model_dump() for record in input_data_list])   
 
     return {
-    "job_id": [record.id for record in records],
+    "job_id": job_id,
     "status": "queued"
     }
 
@@ -118,3 +124,13 @@ def statistics(db: Session=Depends(get_db)):
     """
     stats = get_statistics(db_session=db)
     return {"statistics": stats}
+
+
+@app.get("/results/{job_id}")
+def get_results(job_id: str, db: Session = Depends(get_db)):
+    """
+    Returns prediction results for the given job_id.
+    Single predictions return one record, batch predictions return all records in that batch.
+    """
+    results = get_results_by_job_id(job_id=job_id, db_session=db)
+    return {"job_id": job_id, "total": len(results), "results": results}
