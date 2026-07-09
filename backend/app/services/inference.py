@@ -1,6 +1,6 @@
 import pandas as pd
 from app.database.models import PredictionResults
-
+import uuid
 def prediction(pipeline ,input_data: dict, db_session):
     """
     Predicts the output based on the input data using the loaded model.
@@ -11,16 +11,19 @@ def prediction(pipeline ,input_data: dict, db_session):
     Returns:
         array: The predicted output.
     """
+    job_id = str(uuid.uuid4())
     X = pd.DataFrame([input_data])
 
     prediction_result = int(pipeline.predict(X)[0])
     confidence = pipeline.predict_proba(X)[0].max()
 
     record = PredictionResults(
+        job_id=job_id,
         input_data = input_data,
         predicted_label = prediction_result,
-        confidence = float(confidence)
-    )
+        confidence = float(confidence),
+        status = "completed" 
+                  )
     db_session.add(record)
     db_session.commit()
     db_session.refresh(record)
@@ -38,7 +41,7 @@ def batch_prediction(pipeline, input_data_list: list[dict], db_session):
     Predicts the output for a batch of input data using the loaded model.
     """
     X = pd.DataFrame(input_data_list)
-
+    job_id = str(uuid.uuid4())
     prediction_results = pipeline.predict(X)
     proba = pipeline.predict_proba(X)
     confidence = proba.max(axis=1)
@@ -47,9 +50,11 @@ def batch_prediction(pipeline, input_data_list: list[dict], db_session):
     response = []
     for record, pred, conf in zip(input_data_list, prediction_results, confidence):
         db_records.append(PredictionResults(
+            job_id=job_id,
             input_data=record,
             predicted_label=bool(pred),
-            confidence=float(conf)
+            confidence = float(confidence),
+            status = "completed"            
                 )
             )
 
