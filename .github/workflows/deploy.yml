@@ -33,5 +33,7 @@ jobs:
           script: |
             cd /home/ubuntu/tcc-Project-1
             docker compose pull
-            docker compose up -d --scale worker=$(nproc)
+            docker compose up -d 
+
+
             
