@@ -21,17 +21,17 @@ local_path = os.getenv("AWS_LOCAL_MODEL_PATH")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """    print("Startup Python:", sys.executable) 
+    print("Startup Python:", sys.executable) 
     model_manager.load_from_s3(bucket=bucket, key=key, local_path=local_path)
     try:
        redis_client.ping()
        print("Redis connected successfully.")
     except ConnectionError:
         print("Failed to connect to Redis.")
-        raise"""
+        raise
     yield
-    """    redis_client.close()
-    print("Application is shutting down...")"""
+    redis_client.close()
+    print("Application is shutting down...")
 
 app = FastAPI(lifespan=lifespan)
 
