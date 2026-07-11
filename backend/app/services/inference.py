@@ -53,7 +53,7 @@ def batch_prediction(pipeline, input_data_list: list[dict], db_session):
             job_id=job_id,
             input_data=record,
             predicted_label=bool(pred),
-            confidence = float(confidence),
+            confidence = float(conf),
             status = "completed"            
                 )
             )
